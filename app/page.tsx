@@ -1,7 +1,31 @@
 "use client";
-import { ChangeEvent, FormEvent, useState } from "react";
+import React, { ChangeEvent, FormEvent, useState } from "react";
 import { IconProps } from "@radix-ui/react-icons/dist/types";
-import Button from "../components/Button";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Loader2, Upload, Utensils } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+
+import ReactMarkdown from "react-markdown";
+
+type MenuItem = {
+  name: string;
+  ingredients: string[];
+  isVegetarian: boolean;
+};
 
 export default function Home() {
   const [file, setFile] = useState<File | undefined>();
@@ -56,57 +80,103 @@ export default function Home() {
     }
   };
 
-  return (
-    <main className="flex flex-col items-center justify-center h-screen">
-      <div className="w-full max-w-3xl p-6 md:p-8 lg:p-10">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md">
-          <div className="p-6 md:p-8 lg:p-10">
-            <h1 className="text-2xl font-bold mb-4 dark:text-gray-200">
-              Upload the menu
-            </h1>
-            <form>
-              <div className="flex justify-center items-center h-64 bg-gray-200 dark:bg-gray-700 rounded-lg mb-6">
-                <label
-                  className="cursor-pointer flex flex-col items-center justify-center space-y-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
-                  htmlFor="image-upload"
-                >
-                  <UploadIcon className="w-8 h-8" />
-                  <span>Drag and drop or click to upload</span>
-                </label>
-                <input
-                  accept="image/*"
-                  className="hidden"
-                  id="image-upload"
-                  type="file"
-                  onChange={handleFileChange}
-                />
-              </div>
+  const parseMenuItems = (content: string): MenuItem[] => {
+    const items = content.split("\n\n");
+    return items.map((item) => {
+      const [name, ingredientsStr, vegetarianStr] = item.split("\n");
+      return {
+        name,
+        ingredients: ingredientsStr.replace("Ingredients: ", "").split(", "),
+        isVegetarian: vegetarianStr.includes("Vegetarian: Yes"),
+      };
+    });
+  };
+  // const menuItems = aiResult ? parseMenuItems(aiResult) : [];
 
-              {preview && (
-                <div className="bg-white dark:bg-gray-800 shadow-md mt-4 mb-4">
-                  <img
-                    src={preview}
-                    alt="Uploaded Image"
-                    width={600}
-                    height={400}
-                    className="w-full h-auto rounded-lg"
-                  />
-                </div>
-              )}
-              <div className="flex justify-between">
-                <Button text="Upload" submitHandler={handleWorkerApiSubmit} />
-              </div>
-            </form>
-            <div className="mt-2">
-              <p className="text-gray-200 dark:text-gray-500">{message}</p>
-            </div>
-          </div>
-          <div className="text-white">
-            <p>{aiResult}</p>
-          </div>
+  return (
+    <div className="container mx-auto p-4 max-w-4xl">
+      <Card className="mb-8 overflow-hidden">
+        <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-6 text-white">
+          <CardHeader className="p-0">
+            <CardTitle className="text-4xl font-bold flex items-center mb-2">
+              <Utensils className="mr-2" />
+              Menu Translator
+            </CardTitle>
+            <CardDescription className="text-white/80">
+              Upload a menu image and get it translated to English with
+              ingredient details
+            </CardDescription>
+          </CardHeader>
         </div>
-      </div>
-    </main>
+        <CardContent className="p-6">
+          <form>
+            <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
+              <div className="relative w-full">
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="opacity-0 absolute inset-0 w-full h-full cursor-pointer z-10"
+                  aria-label="Upload menu image"
+                />
+                <Button variant="outline" className="w-full">
+                  <Upload className="mr-2 h-4 w-4" /> Choose Image
+                </Button>
+              </div>
+              <Button
+                type="submit"
+                onClick={(e) => handleWorkerApiSubmit(e)}
+                disabled={!preview || uploading}
+                className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700"
+              >
+                {uploading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Translating...
+                  </>
+                ) : (
+                  "Translate Menu"
+                )}
+              </Button>
+            </div>
+          </form>
+          {preview && (
+            <div className="mt-4">
+              <p className="text-sm text-gray-600 mb-2">
+                Selected image preview:
+              </p>
+              <img
+                src={preview}
+                alt="Menu preview"
+                className="max-w-full h-auto rounded-lg shadow-md"
+              />
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <AnimatePresence>
+        {aiResult && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.5 }}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-3xl font-bold text-purple-600">
+                  Translated Menu
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ReactMarkdown>{aiResult}</ReactMarkdown>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
