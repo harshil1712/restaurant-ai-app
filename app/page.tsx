@@ -12,12 +12,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Loader2, Upload, Utensils } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 
 import ReactMarkdown from "react-markdown";
 
@@ -125,7 +119,12 @@ export default function Home() {
               </div>
               <Button
                 type="submit"
-                onClick={(e) => handleWorkerApiSubmit(e)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleWorkerApiSubmit(
+                    e as unknown as FormEvent<HTMLFormElement>
+                  );
+                }}
                 disabled={!preview || uploading}
                 className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700"
               >

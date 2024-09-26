@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     const input = {
       // @ts-ignore
       image: [...new Uint8Array(blob)],
-      prompt: `Help me with translating the image of a restaurant menu into English. Please provide the list of the ingredients. Tell me if the dish is vegeterian or not. If you don't know the answer to any of these questions, you can say 'I don't know'. Provide the result in markdown format.
+      prompt: `Help me with translating the image of a restaurant menu into English. Please provide the list of the ingredients. Tell me if the dish is vegeterian or not. If you don't know the answer to any of these questions, you can say 'I don't know'.
         `,
     };
 
